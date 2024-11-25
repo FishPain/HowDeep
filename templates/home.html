@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+
+{% block head %}
+<style>
+  .drag-drop-area {
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    color: #777;
+    cursor: pointer;
+  }
+
+  .drag-drop-area.dragging {
+    border-color: #007bff;
+    background-color: #f8f9fa;
+  }
+
+  .drag-drop-area input {
+    display: none;
+  }
+
+  .example-images {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-right: 20px;
+  }
+
+  .example-images img {
+    width: 100px;
+    border: 2px solid transparent;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .example-images img.selected {
+    border-color: #007bff;
+  }
+
+  .example-label {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #555;
+  }
+
+  .form-container {
+    display: flex;
+    align-items: center;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="h-100 d-flex align-items-center">
+  <div class="container">
+    <div class="card text-center">
+      <div class="card-header">Deep Fake Detector</div>
+      {% if error_message %}
+      <div class="alert alert-danger" role="alert">{{ error_message }}</div>
+      {% endif %}
+      <div class="card-body">
+        <h5 class="card-title">Select or Upload an Image Below</h5>
+        <div class="form-container">
+          <!-- Example Images -->
+          <div class="example-images">
+            <div>
+              <img
+                src="/static/images/real1.jpg"
+                alt="Real Example"
+                class="example-image"
+                data-filepath="/static/images/real1.jpg"
+              />
+              <div class="example-label">Real</div>
+            </div>
+            <div>
+              <img
+                src="/static/images/fake1.jpg"
+                alt="Fake Example"
+                class="example-image"
+                data-filepath="/static/images/fake1.jpg"
+              />
+              <div class="example-label">Fake</div>
+            </div>
+            <div>
+              <img
+                src="/static/images/real2.jpg"
+                alt="Real Example"
+                class="example-image"
+                data-filepath="/static/images/real2.jpg"
+              />
+              <div class="example-label">Real</div>
+            </div>
+            <div>
+              <img
+                src="/static/images/fake2.jpg"
+                alt="Fake Example"
+                class="example-image"
+                data-filepath="/static/images/fake2.jpg"
+              />
+              <div class="example-label">Fake</div>
+            </div>
+          </div>
+
+          <!-- Drag and Drop Area -->
+          <form
+            action="/"
+            method="post"
+            enctype="multipart/form-data"
+            id="uploadForm"
+          >
+            <div class="drag-drop-area" id="dragDropArea">
+              <p>Drag and drop an image file here, or click to select one.</p>
+              <input
+                type="file"
+                name="image"
+                id="imageInput"
+                accept="image/png, image/jpeg"
+              />
+              <input
+                type="hidden"
+                name="selected_example"
+                id="selectedExample"
+                value=""
+              />
+            </div>
+            <input
+              type="submit"
+              class="btn btn-primary mt-3"
+              value="Upload and Process"
+            />
+          </form>
+        </div>
+      </div>
+      <div class="card-footer text-muted">
+        Upload your image or select an example to see the processed result.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const dragDropArea = document.getElementById("dragDropArea");
+  const inputFile = dragDropArea.querySelector("input[type='file']");
+  const selectedExampleInput = document.getElementById("selectedExample");
+  const exampleImages = document.querySelectorAll(".example-images img");
+
+  // Highlight drag area when dragging files
+  dragDropArea.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dragDropArea.classList.add("dragging");
+  });
+
+  dragDropArea.addEventListener("dragleave", () => {
+    dragDropArea.classList.remove("dragging");
+  });
+
+  // Handle file drop
+  dragDropArea.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dragDropArea.classList.remove("dragging");
+    const files = e.dataTransfer.files;
+    if (files.length) {
+      inputFile.files = files;
+      selectedExampleInput.value = ""; // Clear example selection
+    }
+  });
+
+  // Trigger file selection when clicking the drag area
+  dragDropArea.addEventListener("click", () => {
+    inputFile.click();
+  });
+
+  // Handle example image selection
+  exampleImages.forEach((img) => {
+    img.addEventListener("click", () => {
+      exampleImages.forEach((img) => img.classList.remove("selected"));
+      img.classList.add("selected");
+      selectedExampleInput.value = img.dataset.filepath; // Set hidden input
+      inputFile.value = ""; // Clear file input
+    });
+  });
+</script>
+{% endblock %}
