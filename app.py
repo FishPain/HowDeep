@@ -18,7 +18,7 @@ def check_image(image):
     else:
         pred_label = "Fake"
 
-    return pred_label, prediction, overlay
+    return pred_label, overlay
 
 
 st.set_page_config(layout="wide")
@@ -93,11 +93,11 @@ if image:
     c = st.columns([8, 2])
     # Button to process the selected image
     if c[-1].button("Process Image"):
-        pred_label, pred_raw, processed_image = check_image(image)
+        pred_label, processed_image = check_image(image)
 
         # Show a modal with the processed image
         with st.expander("Processed Image"):
-            st.write(f"This image is {pred_label} with {pred_raw*100:2f}")
+            st.write(f"This image is {pred_label}")
             st.image(
                 processed_image, caption="Processed Image", use_container_width=True
             )
