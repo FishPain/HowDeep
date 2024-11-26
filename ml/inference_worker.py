@@ -16,7 +16,7 @@ class InferenceWorker:
         # Load the model
         self.model = CustomModel(backbone_model=ResnetModel()).to(self.device)
         # Load the trained model
-        self.model.load_state_dict(torch.load("../models/90_5_clip_extractor.pth"))
+        self.model.load_state_dict(torch.load("../weights/90_5_clip_extractor.pth"))
         self.model.load_data(self.batch_size)
         self.model = self.model.to(self.device)
 
