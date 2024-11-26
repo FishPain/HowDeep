@@ -1,72 +1,99 @@
-from flask import Flask, render_template, request
-from src.ml.inference_worker import InferenceWorker
+import streamlit as st
+import requests
+from PIL import Image
+from st_clickable_images import clickable_images
+
+from ml.inference_worker import InferenceWorker
+
+inference_worker = InferenceWorker()
+inference_worker.load_model()
+
+# Mock process_image() method
+def check_image(image):
+    prediction, overlay = inference_worker.predict_and_explain(image)
+
+    return prediction, overlay
+
+
+st.set_page_config(layout="wide")
+
+# Centered title using custom HTML and CSS
+st.markdown(
+    """
+    <style>
+    .title {
+        text-align: center;
+        font-size: 2.5em;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+    </style>
+    <div class="title">HowReal? Check for Deepfake Now!</div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# File uploader
+image_to_process = None  # To store the image to be sent to process_image()
+
+c1, c2 = st.columns(2)
+image = None
+
 import os
 
-from src.app import app_utils
-from io import BytesIO
+os.environ["STREAMLIT_SERVER_ENABLE_STATIC_SERVING"] = "true"
 
-PORT = int(os.getenv("PORT", 5001))
-UPLOAD_FOLDER = "uploads"
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
+with c1:
+    uploaded_file = st.file_uploader("Upload an Image", type=["jpg", "jpeg", "png"])
 
-app = Flask(__name__)
+    # Display clickable images if no upload
+    st.subheader("Or Select an Image:")
+    clicked = clickable_images(
+        [
+            "http://localhost:8508/app/static/valid_fake_0004573.png",
+            "http://localhost:8508/app/static/valid_fake_0004634.png",
+            "http://localhost:8508/app/static/valid_fake_0006713.png",
+            "http://localhost:8508/app/static/valid_real_0009792.png",
+            "http://localhost:8508/app/static/valid_real_0010329.png",
+            "http://localhost:8508/app/static/valid_real_0011665.png",
+        ],
+        titles=[f"Image #{str(i)}" for i in range(5)],
+        div_style={
+            "display": "flex",
+            "justify-content": "center",
+            "flex-wrap": "wrap",
+        },
+        img_style={"margin": "5px", "height": "200px"},
+    )
+    # Display the uploaded or clickable images
+    if uploaded_file is not None:
+        # Open the uploaded image
+        st.toast("Image uploaded", icon="✅")
+        image = Image.open(uploaded_file)
+    elif clicked > -1:
+        # If an image is clicked, load it from the URL
+        image_url = [
+            "https://images.unsplash.com/photo-1565130838609-c3a86655db61?w=700",
+            "https://images.unsplash.com/photo-1565372195458-9de0b320ef04?w=700",
+            "https://images.unsplash.com/photo-1582550945154-66ea8fff25e1?w=700",
+            "https://images.unsplash.com/photo-1591797442444-039f23ddcc14?w=700",
+            "https://images.unsplash.com/photo-1518727818782-ed5341dbd476?w=700",
+        ][clicked]
+        image = Image.open(
+            requests.get(image_url, stream=True).raw
+        )  # Load the clicked image
 
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+if image:
+    c2.image(image, caption="Selected Image", use_container_width=True)
 
+    c = st.columns([8, 2])
+    # Button to process the selected image
+    if c[-1].button("Process Image"):
+        pred, processed_image = check_image(image)
 
-# Helper function to check allowed file types
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-@app.route("/", methods=["GET", "POST"])
-def root():
-    processed_image = None
-    error_message = None
-
-    if request.method == "POST":
-        if "image" not in request.files:
-            error_message = "No file part"
-            return render_template("home.html", error_message=error_message)
-
-        file = request.files["image"]
-        if file.filename == "":
-            error_message = "No selected file"
-            return render_template("home.html", error_message=error_message)
-
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-            file.save(filepath)
-
-            try:
-                # Process the image
-                inference_worker = InferenceWorker(filepath)
-                processed_image = (
-                    inference_worker.process_image()
-                )  # Assumes a method `process_image`
-
-                # Save the processed image to a buffer for returning
-                img_io = BytesIO()
-                processed_image.save(img_io, format="PNG")
-                img_io.seek(0)
-
-                return send_file(img_io, mimetype="image/png")
-
-            except Exception as e:
-                error_message = f"Error during image processing: {e}"
-        else:
-            error_message = "Invalid file type. Please upload a PNG or JPG file."
-
-    return render_template("home.html", error_message=error_message)
-
-
-# 404 Page
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template("404.html"), 404
-
-
-if __name__ == "__main__":
-    app.debug = True
-    app.run(host="0.0.0.0", port=PORT)
+        # Show a modal with the processed image
+        with st.expander("Processed Image"):
+            st.image(
+                processed_image, caption="Processed Image", use_container_width=True
+            )
+            st.success("Processing complete!")

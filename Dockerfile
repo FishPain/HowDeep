@@ -1,32 +1,23 @@
-# Use an official Python runtime as a parent image
-FROM python:3.8-slim
+# Use a lightweight Python image
+FROM python:3.9-slim
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /app
 
-# Install curl
-RUN apt-get update && apt-get install -y curl
+# Install system dependencies
+RUN apt-get update
 
-# Copy the requirements.txt file into the container at /app
+# Copy only the requirements file for dependency caching
 COPY requirements.txt /app/
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --trusted-host pypi.python.org -r requirements.txt
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the current directory contents into the container at /app
+# Copy the rest of the application code
 COPY . /app/
 
-# download random forest model
-ARG ASSET_NAME=rf.pkl
-ARG LOCAL_FILENAME=src/models/${ASSET_NAME}
-RUN curl -LJO https://github.com/FishPain/sure-bo/releases/download/v0.1.0/${ASSET_NAME}
-RUN if [ ! -d /app/src/models ]; then mkdir -p /app/src/models; fi
-RUN mv ${ASSET_NAME} ${LOCAL_FILENAME} \
-    && ls -lh ${LOCAL_FILENAME} \
-    && echo "File downloaded successfully."
-    
-# Make port 80 available to the world outside this container
-EXPOSE 80
+# Expose the Streamlit port
+EXPOSE 8501
 
-# Run app.py when the container launches
-CMD ["python", "app.py"]
+# Set the entry point to run the Streamlit app
+ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
