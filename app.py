@@ -13,12 +13,12 @@ inference_worker.load_model()
 def check_image(image):
     prediction, overlay = inference_worker.predict_and_explain(image)
 
-    if prediction > 0:
+    if prediction > 0.5:
         pred_label = "Real"
     else:
         pred_label = "Fake"
 
-    return pred_label, prediction , overlay
+    return pred_label, prediction, overlay
 
 
 st.set_page_config(layout="wide")

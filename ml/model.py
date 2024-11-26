@@ -162,8 +162,13 @@ class GradCAM:
 
         cam = np.maximum(cam, 0)  # ReLU
         cam = cv2.resize(cam, (input_tensor.size(3), input_tensor.size(2)))  # Resize to input size
-        cam -= np.min(cam)
-        cam /= np.max(cam)
+
+        # Safeguard against zero max value
+        max_value = np.max(cam)
+        if max_value > 0:
+            cam /= max_value
+        else:
+            cam = np.zeros_like(cam)
         return cam
 
     def overlay_heatmap(self, heatmap, image, alpha=0.5):
