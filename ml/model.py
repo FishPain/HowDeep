@@ -82,6 +82,7 @@ class CustomClassifier(nn.Module):
         self.fc3 = nn.Linear(512, 1)
         self.relu = nn.ReLU()
         self.drop = nn.Dropout(0.4)
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, bb_embed, img_emb, text_emb):
         # Concatenate the embeddings along the feature dimension
@@ -95,6 +96,7 @@ class CustomClassifier(nn.Module):
         x = self.relu(x)
         x = self.drop(x)
         x = self.fc3(x)
+        x = self.sigmoid(x)
         return x
 
 

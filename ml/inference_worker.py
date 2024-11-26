@@ -16,8 +16,7 @@ class InferenceWorker:
         # Load the model
         self.model = CustomModel(backbone_model=ResnetModel()).to(self.device)
         # Load the trained model
-        self.model.load_state_dict(torch.load("../weights/90_5_clip_extractor.pth"))
-        self.model.load_data(self.batch_size)
+        self.model.load_state_dict(torch.load("/app/weights/90_5_clip_extractor.pth",map_location=torch.device('cpu')))
         self.model = self.model.to(self.device)
 
         # Initialize Grad-CAM
@@ -34,7 +33,7 @@ class InferenceWorker:
 
         # Make prediction
         with torch.no_grad():
-            prediction = self.model(input_tensor).squeeze().item()
+            prediction = self.model(input_tensor).squeeze()
 
         # Generate Grad-CAM heatmap
         heatmap = self.grad_cam.generate_heatmap(input_tensor)
