@@ -5,8 +5,12 @@
 - Hosting available at the `./app.py` file
   
 ## Getting Started
-### Getting the model weights
-> Due to the size of the model and the nature of our competition, we did not include the weights. Please contact us directly for the weights if you wish to run the model.
+> Due to the size of the model and the nature of our competition, we did not include the following within our public github at the moment
+> 1. The weights
+> 2. The model's training and inference code
+> 3. The model's hyperparameters
+>    
+> Please contact us directly if you wish for more details.
 
 ### Building the demo locally
 You can run the application on docker by running 
