@@ -1,4 +1,4 @@
-# ICASSP 2024 Deepfake in the wild
+# Generalised Deepfake detection
 
 ## Directions
 - Model available at the `./ml/model.py` file
